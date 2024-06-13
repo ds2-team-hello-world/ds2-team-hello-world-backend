@@ -1,0 +1,40 @@
+name: 'CI - Code Coverage'
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        working-directory: ./app
+      - name: Run tests and generate coverage report
+        run: |
+          pip install pytest pytest-cov
+          pytest --cov=app --cov-report=term > result.log
+        working-directory: ./app
+      - name: Post coverage comment to PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: ./app/result.log
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

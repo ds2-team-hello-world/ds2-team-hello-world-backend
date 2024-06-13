@@ -1,0 +1,10 @@
+{
+  "realm": "myrealm",
+  "auth-server-url": "http://keycloak:8080",
+  "ssl-required": "none",
+  "resource": "mybackendclient",
+  "credentials": {
+    "secret": "mysecret"
+  },
+  "confidential-port": 0
+}
