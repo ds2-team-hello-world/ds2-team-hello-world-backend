@@ -27,8 +27,8 @@ jobs:
 
       - name: Build and push Docker images
         run: |
-          docker buildx build --push --tag ${{ secrets.DOCKER_USERNAME }}/backend-service:latest ./app
-          docker buildx build --push --tag ${{ secrets.DOCKER_USERNAME }}/configure-keycloak:latest ./keycloak
+          docker buildx build --push --tag ${{ secrets.DOCKER_USERNAME }}/backend-service:${{ github.sha }} ./app
+          docker buildx build --push --tag ${{ secrets.DOCKER_USERNAME }}/configure-keycloak:${{ github.sha }} ./keycloak
         working-directory: .
 
       - name: Authenticate to Google Cloud
@@ -91,19 +91,19 @@ jobs:
       - name: Deploy to Development
         if: github.ref == 'refs/heads/dev'
         env:
-          BACKEND_IMAGE_TAG: ${{ secrets.DOCKER_USERNAME }}/backend-service:latest
-          KEYCLOAK_CONFIG_IMAGE_TAG: ${{ secrets.DOCKER_USERNAME }}/configure-keycloak:latest
+          BACKEND_IMAGE_TAG: ${{ secrets.DOCKER_USERNAME }}/backend-service:${{ github.sha }}
+          KEYCLOAK_CONFIG_IMAGE_TAG: ${{ secrets.DOCKER_USERNAME }}/configure-keycloak:${{ github.sha }}
         run: |
-          if kubectl get deployments -k k8s/overlays/dev > /dev/null 2>&1; then
-            kubectl rollout restart -k k8s/overlays/dev
-          else
-            kubectl apply -k k8s/overlays/dev
-          fi
+          kubectl apply -k k8s/overlays/dev 
+          kubectl set image deployment/backend-deployment backend=${{ secrets.DOCKER_USERNAME }}/backend-service:${{ github.sha }} -n dev
+          kubectl set image deployment/keycloak-deployment keycloak=${{ secrets.DOCKER_USERNAME }}/configure-keycloak:${{ github.sha }} -n dev
+
       - name: Deploy to Production
         if: github.ref == 'refs/heads/main'
+        env:
+          BACKEND_IMAGE_TAG: ${{ secrets.DOCKER_USERNAME }}/backend-service:${{ github.sha }}
+          KEYCLOAK_CONFIG_IMAGE_TAG: ${{ secrets.DOCKER_USERNAME }}/configure-keycloak:${{ github.sha }}
         run: |
-          if kubectl get deployments -k k8s/overlays/prod > /dev/null 2>&1; then
-            kubectl rollout restart -k k8s/overlays/prod
-          else
-            kubectl apply -k k8s/overlays/prod
-          fi
+          kubectl apply -k k8s/overlays/prod
+          kubectl set image deployment/backend-deployment backend=${{ secrets.DOCKER_USERNAME }}/backend-service:${{ github.sha }} -n prod
+          kubectl set image deployment/keycloak-deployment keycloak=${{ secrets.DOCKER_USERNAME }}/configure-keycloak:${{ github.sha }} -n prod
