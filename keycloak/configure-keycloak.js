@@ -133,8 +133,18 @@ async function createClient(token, clientId, isPublic) {
             enabled: true,
             publicClient: isPublic,
             secret: isPublic ? undefined : clientSecret,
-            redirectUris: ['http://localhost:8000/*', 'http://172.17.144.1:8000/*'],
-            webOrigins: ['http://localhost:8000', 'http://172.17.144.1:8000'],
+            redirectUris: [
+                'http://localhost:8000/*',
+                'http://172.17.144.1:8000/*',
+                'http://ds2-bucket-dev.s3-website-us-east-1.amazonaws.com/*',
+                'http://ds2-bucket.s3-website-us-east-1.amazonaws.com/*'
+            ],
+            webOrigins: [
+                'http://localhost:8000',
+                'http://172.17.144.1:8000',
+                'http://ds2-bucket-dev.s3-website-us-east-1.amazonaws.com',
+                'http://ds2-bucket.s3-website-us-east-1.amazonaws.com'
+            ],
             directAccessGrantsEnabled: true
         }, {
             headers: {

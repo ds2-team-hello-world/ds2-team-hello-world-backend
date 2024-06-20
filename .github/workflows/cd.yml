@@ -94,9 +94,16 @@ jobs:
           BACKEND_IMAGE_TAG: ${{ secrets.DOCKER_USERNAME }}/backend-service:latest
           KEYCLOAK_CONFIG_IMAGE_TAG: ${{ secrets.DOCKER_USERNAME }}/configure-keycloak:latest
         run: |
-          kubectl apply -k k8s/overlays/dev
-
+          if kubectl get deployments -k k8s/overlays/dev > /dev/null 2>&1; then
+            kubectl rollout restart -k k8s/overlays/dev
+          else
+            kubectl apply -k k8s/overlays/dev
+          fi
       - name: Deploy to Production
         if: github.ref == 'refs/heads/main'
         run: |
-          kubectl apply -k k8s/overlays/prod
+          if kubectl get deployments -k k8s/overlays/prod > /dev/null 2>&1; then
+            kubectl rollout restart -k k8s/overlays/prod
+          else
+            kubectl apply -k k8s/overlays/prod
+          fi
