@@ -95,7 +95,7 @@ jobs:
           KEYCLOAK_CONFIG_IMAGE_TAG: ${{ secrets.DOCKER_USERNAME }}/configure-keycloak:${{ github.sha }}
         run: |
           kubectl apply -k k8s/overlays/dev 
-          kubectl set image deployment/backend-deployment backend=${{ secrets.DOCKER_USERNAME }}/backend-service:${{ github.sha }} -n dev
+          kubectl set image deployment/backend-deployment backend=${{ secrets.DOCKER_USERNAME }}/backend:${{ github.sha }} -n dev
           kubectl set image deployment/keycloak-deployment keycloak=${{ secrets.DOCKER_USERNAME }}/configure-keycloak:${{ github.sha }} -n dev
 
       - name: Deploy to Production
@@ -105,5 +105,5 @@ jobs:
           KEYCLOAK_CONFIG_IMAGE_TAG: ${{ secrets.DOCKER_USERNAME }}/configure-keycloak:${{ github.sha }}
         run: |
           kubectl apply -k k8s/overlays/prod
-          kubectl set image deployment/backend-deployment backend=${{ secrets.DOCKER_USERNAME }}/backend-service:${{ github.sha }} -n prod
+          kubectl set image deployment/backend-deployment backend=${{ secrets.DOCKER_USERNAME }}/backend:${{ github.sha }} -n prod
           kubectl set image deployment/keycloak-deployment keycloak=${{ secrets.DOCKER_USERNAME }}/configure-keycloak:${{ github.sha }} -n prod
