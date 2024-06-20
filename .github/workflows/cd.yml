@@ -1,0 +1,102 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      docker:
+        image: docker:19.03.12
+        options: --privileged
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and push Docker images
+        run: |
+          docker buildx build --push --tag ${{ secrets.DOCKER_USERNAME }}/backend-service:latest ./app
+          docker buildx build --push --tag ${{ secrets.DOCKER_USERNAME }}/configure-keycloak:latest ./keycloak
+        working-directory: .
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          version: 'latest'
+
+      - name: Install gke-gcloud-auth-plugin
+        run: |
+          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list
+          sudo apt-get install -y apt-transport-https ca-certificates gnupg
+          curl -sSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+          sudo apt-get update && sudo apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin
+
+      - name: Authenticate to GKE
+        run: |
+          gcloud config set project ${{ secrets.GCP_PROJECT }}
+          gcloud config set compute/zone ${{ secrets.GKE_ZONE }}
+          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Verify connection
+        run: kubectl get nodes
+
+      - name: Create prod namespace
+        if: github.ref == 'refs/heads/main'
+        run: |
+          kubectl create namespace prod || echo "Namespace prod already exists"
+
+      - name: Create dev namespace
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          kubectl create namespace dev || echo "Namespace dev already exists"
+
+      - name: Create Secrets for Development
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          kubectl create secret generic backend-secret --from-literal=DB_USER=${{ secrets.DB_USER_DEV }} --from-literal=DB_PASSWORD=${{ secrets.DB_PASSWORD_DEV }} --dry-run=client -o yaml | kubectl apply -f - -n dev
+          kubectl create secret generic keycloak-db-secret --from-literal=POSTGRES_USER=${{ secrets.POSTGRES_USER }} --from-literal=POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} --dry-run=client -o yaml | kubectl apply -f - -n dev
+          kubectl create secret generic keycloak-secret --from-literal=KEYCLOAK_ADMIN=${{ secrets.KEYCLOAK_ADMIN }} --from-literal=KEYCLOAK_ADMIN_PASSWORD=${{ secrets.KEYCLOAK_ADMIN_PASSWORD }} --from-literal=DB_USER=${{ secrets.POSTGRES_USER }} --from-literal=DB_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} --dry-run=client -o yaml | kubectl apply -f - -n dev
+          kubectl create secret generic mysql-secret --from-literal=MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD_DEV }} --dry-run=client -o yaml | kubectl apply -f - -n dev
+
+      - name: Create Secrets for Production
+        if: github.ref == 'refs/heads/main'
+        run: |
+          kubectl create secret generic backend-secret --from-literal=DB_USER=${{ secrets.DB_USER_PROD }} --from-literal=DB_PASSWORD=${{ secrets.DB_PASSWORD_PROD }} --dry-run=client -o yaml | kubectl apply -f - -n prod
+          kubectl create secret generic keycloak-db-secret --from-literal=POSTGRES_USER=${{ secrets.POSTGRES_USER }} --from-literal=POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} --dry-run=client -o yaml | kubectl apply -f - -n prod
+          kubectl create secret generic keycloak-secret --from-literal=KEYCLOAK_ADMIN=${{ secrets.KEYCLOAK_ADMIN }} --from-literal=KEYCLOAK_ADMIN_PASSWORD=${{ secrets.KEYCLOAK_ADMIN_PASSWORD }} --from-literal=DB_USER=${{ secrets.POSTGRES_USER }} --from-literal=DB_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} --dry-run=client -o yaml | kubectl apply -f - -n prod
+          kubectl create secret generic mysql-secret --from-literal=MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD_PROD }} --dry-run=client -o yaml | kubectl apply -f - -n prod
+
+      - name: Deploy to Development
+        if: github.ref == 'refs/heads/dev'
+        env:
+          BACKEND_IMAGE_TAG: ${{ secrets.DOCKER_USERNAME }}/backend-service:latest
+          KEYCLOAK_CONFIG_IMAGE_TAG: ${{ secrets.DOCKER_USERNAME }}/configure-keycloak:latest
+        run: |
+          kubectl apply -k k8s/overlays/dev
+
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/main'
+        run: |
+          kubectl apply -k k8s/overlays/prod
