@@ -9,6 +9,7 @@ import json
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
+
 # Load Keycloak configuration from JSON file
 with open('keycloak-config.json') as f:
     keycloak_config = json.load(f)
