@@ -96,7 +96,8 @@ jobs:
         run: |
           kubectl apply -k k8s/overlays/dev 
           kubectl set image deployment/backend backend=${{ secrets.DOCKER_USERNAME }}/backend-service:${{ github.sha }} -n dev
-          kubectl set image deployment/configure-keycloak keycloak=${{ secrets.DOCKER_USERNAME }}/configure-keycloak:${{ github.sha }} -n dev
+          kubectl delete job configure-keycloak -n dev || true
+          kubectl apply -f k8s/jobs/configure-keycloak.yaml -n dev
 
       - name: Deploy to Production
         if: github.ref == 'refs/heads/main'
@@ -106,4 +107,5 @@ jobs:
         run: |
           kubectl apply -k k8s/overlays/prod
           kubectl set image deployment/backend backend=${{ secrets.DOCKER_USERNAME }}/backend-service:${{ github.sha }} -n prod
-          kubectl set image deployment/configure-keycloak keycloak=${{ secrets.DOCKER_USERNAME }}/configure-keycloak:${{ github.sha }} -n prod
+          kubectl delete job configure-keycloak -n prod || true
+          kubectl apply -f k8s/jobs/configure-keycloak.yaml -n prod
