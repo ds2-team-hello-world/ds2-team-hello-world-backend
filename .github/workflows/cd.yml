@@ -107,4 +107,3 @@ jobs:
           kubectl delete job configure-keycloak -n prod || true
           kubectl apply -k k8s/overlays/prod
           kubectl set image deployment/backend backend=${{ secrets.DOCKER_USERNAME }}/backend-service:${{ github.sha }} -n prod
-          kubectl delete job configure-keycloak -n prod || true
