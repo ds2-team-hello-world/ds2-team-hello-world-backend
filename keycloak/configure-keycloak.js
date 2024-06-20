@@ -11,7 +11,7 @@ const password = 'testpassword';
 const recreateRealm = false; // Set this to true to delete and recreate the realm
 
 const maxRetries = 10;
-const retryInterval = 50000;
+const retryInterval = 5000;
 
 async function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -102,16 +102,19 @@ async function createRealm(token) {
     }
 
     try {
-        // set the frontendurl to localhost:8000
         await axios.post(`${keycloakUrl}/admin/realms`, {
             realm: realmName,
-            enabled: true
+            enabled: true,
+            attributes: {
+                'contentSecurityPolicy': "frame-ancestors *"
+            }
         }, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
         });
+        console.log('Realm created successfully');
     } catch (error) {
         console.error('Failed to create realm:', error.response ? error.response.data : error.message);
         throw error;
@@ -128,11 +131,11 @@ async function createClient(token, clientId, isPublic) {
         const response = await axios.post(`${keycloakUrl}/admin/realms/${realmName}/clients`, {
             clientId: clientId,
             enabled: true,
-            publicClient: isPublic,  // Set to true for public client
+            publicClient: isPublic,
             secret: isPublic ? undefined : clientSecret,
             redirectUris: ['http://localhost:8000/*', 'http://172.17.144.1:8000/*'],
             webOrigins: ['http://localhost:8000', 'http://172.17.144.1:8000'],
-            directAccessGrantsEnabled: true // Enable direct access grants if needed
+            directAccessGrantsEnabled: true
         }, {
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -143,7 +146,6 @@ async function createClient(token, clientId, isPublic) {
         const client = response.data;
 
         if (!isPublic) {
-            // Add `introspect` role to backend client
             const rolesResponse = await axios.get(`${keycloakUrl}/admin/realms/${realmName}/roles`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -192,6 +194,7 @@ async function createUser(token) {
                 'Content-Type': 'application/json'
             }
         });
+        console.log('User created successfully');
     } catch (error) {
         console.error('Failed to create user:', error.response ? error.response.data : error.message);
         throw error;
@@ -210,8 +213,8 @@ async function configureKeycloak() {
             }
 
             await createRealm(token);
-            await createClient(token, frontendClientId, true);  // Public client for frontend
-            await createClient(token, backendClientId, false); // Confidential client for backend
+            await createClient(token, frontendClientId, true);
+            await createClient(token, backendClientId, false);
             await createUser(token);
             console.log('Keycloak configuration completed.');
             return;
