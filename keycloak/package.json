@@ -1,0 +1,14 @@
+{
+  "name": "configure-keycloak",
+  "version": "1.0.0",
+  "description": "Script to configure Keycloak",
+  "main": "",
+  "scripts": {
+    "start": "node "
+  },
+  "dependencies": {
+    "axios": "^0.21.1"
+  },
+  "author": "",
+  "license": "ISC"
+}
