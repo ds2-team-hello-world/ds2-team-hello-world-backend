@@ -20,6 +20,7 @@ keycloak_openid = KeycloakOpenID(server_url=keycloak_config['auth-server-url'],
                                  realm_name=keycloak_config['realm'],
                                  client_secret_key=keycloak_config['credentials']['secret'])
 
+
 def init_db():
     db_host = os.environ.get('DB_HOST')
     db_user = os.environ.get('DB_USER')
