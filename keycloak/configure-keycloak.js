@@ -13,7 +13,6 @@ const recreateRealm = false; // Set this to true to delete and recreate the real
 const maxRetries = 10;
 const retryInterval = 5000;
 
-
 async function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
