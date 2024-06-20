@@ -9,6 +9,7 @@ import json
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
+
 # Load Keycloak configuration from JSON file
 with open('keycloak-config.json') as f:
     keycloak_config = json.load(f)
@@ -18,6 +19,7 @@ keycloak_openid = KeycloakOpenID(server_url=keycloak_config['auth-server-url'],
                                  client_id=keycloak_config['resource'],
                                  realm_name=keycloak_config['realm'],
                                  client_secret_key=keycloak_config['credentials']['secret'])
+
 
 def init_db():
     db_host = os.environ.get('DB_HOST')
