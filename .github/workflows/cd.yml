@@ -25,6 +25,32 @@ jobs:
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
+      - name: Create .env file for dev
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          echo "DB_USER=${{ secrets.DB_USER_DEV }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD_DEV }}" >> .env
+          echo "DB_NAME=${{ secrets.DB_NAME_DEV }}" >> .env
+          echo "DB_HOST=${{ secrets.DB_HOST_DEV }}" >> .env
+          echo "KEYCLOAK_URL=${{ secrets.KEYCLOAK_URL_DEV }}" >> .env
+          echo "KEYCLOAK_REALM=${{ secrets.KEYCLOAK_REALM_DEV }}" >> .env
+          echo "KEYCLOAK_CLIENT_ID=${{ secrets.KEYCLOAK_CLIENT_ID_DEV }}" >> .env
+          echo "KEYCLOAK_CLIENT_SECRET=${{ secrets.KEYCLOAK_CLIENT_SECRET_DEV }}" >> .env
+        working-directory: ./app
+
+      - name: Create .env file for prod
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "DB_USER=${{ secrets.DB_USER_PROD }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD_PROD }}" >> .env
+          echo "DB_NAME=${{ secrets.DB_NAME_PROD }}" >> .env
+          echo "DB_HOST=${{ secrets.DB_HOST_PROD }}" >> .env
+          echo "KEYCLOAK_URL=${{ secrets.KEYCLOAK_URL_PROD }}" >> .env
+          echo "KEYCLOAK_REALM=${{ secrets.KEYCLOAK_REALM_PROD }}" >> .env
+          echo "KEYCLOAK_CLIENT_ID=${{ secrets.KEYCLOAK_CLIENT_ID_PROD }}" >> .env
+          echo "KEYCLOAK_CLIENT_SECRET=${{ secrets.KEYCLOAK_CLIENT_SECRET_PROD }}" >> .env
+        working-directory: ./app
+
       - name: Build and push Docker images
         run: |
           docker buildx build --push --tag ${{ secrets.DOCKER_USERNAME }}/backend-service:${{ github.sha }} ./app
@@ -75,18 +101,12 @@ jobs:
       - name: Create Secrets for Development
         if: github.ref == 'refs/heads/dev'
         run: |
-          kubectl create secret generic backend-secret --from-literal=DB_USER=${{ secrets.DB_USER_DEV }} --from-literal=DB_PASSWORD=${{ secrets.DB_PASSWORD_DEV }} --dry-run=client -o yaml | kubectl apply -f - -n dev
-          kubectl create secret generic keycloak-db-secret --from-literal=POSTGRES_USER=${{ secrets.POSTGRES_USER }} --from-literal=POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} --dry-run=client -o yaml | kubectl apply -f - -n dev
-          kubectl create secret generic keycloak-secret --from-literal=KEYCLOAK_ADMIN=${{ secrets.KEYCLOAK_ADMIN }} --from-literal=KEYCLOAK_ADMIN_PASSWORD=${{ secrets.KEYCLOAK_ADMIN_PASSWORD }} --from-literal=DB_USER=${{ secrets.POSTGRES_USER }} --from-literal=DB_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} --dry-run=client -o yaml | kubectl apply -f - -n dev
-          kubectl create secret generic mysql-secret --from-literal=MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD_DEV }} --dry-run=client -o yaml | kubectl apply -f - -n dev
+          kubectl create secret generic backend-secret --from-env-file=./app/.env --dry-run=client -o yaml | kubectl apply -f - -n dev
 
       - name: Create Secrets for Production
         if: github.ref == 'refs/heads/main'
         run: |
-          kubectl create secret generic backend-secret --from-literal=DB_USER=${{ secrets.DB_USER_PROD }} --from-literal=DB_PASSWORD=${{ secrets.DB_PASSWORD_PROD }} --dry-run=client -o yaml | kubectl apply -f - -n prod
-          kubectl create secret generic keycloak-db-secret --from-literal=POSTGRES_USER=${{ secrets.POSTGRES_USER }} --from-literal=POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} --dry-run=client -o yaml | kubectl apply -f - -n prod
-          kubectl create secret generic keycloak-secret --from-literal=KEYCLOAK_ADMIN=${{ secrets.KEYCLOAK_ADMIN }} --from-literal=KEYCLOAK_ADMIN_PASSWORD=${{ secrets.KEYCLOAK_ADMIN_PASSWORD }} --from-literal=DB_USER=${{ secrets.POSTGRES_USER }} --from-literal=DB_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} --dry-run=client -o yaml | kubectl apply -f - -n prod
-          kubectl create secret generic mysql-secret --from-literal=MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD_PROD }} --dry-run=client -o yaml | kubectl apply -f - -n prod
+          kubectl create secret generic backend-secret --from-env-file=./app/.env --dry-run=client -o yaml | kubectl apply -f - -n prod
 
       - name: Deploy to Development
         if: github.ref == 'refs/heads/dev'
