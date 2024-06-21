@@ -10,10 +10,6 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 
-# Load Keycloak configuration from JSON file
-with open('keycloak-config.json') as f:
-    keycloak_config = json.load(f)
-
 # Initialize Keycloak OpenID client
 keycloak_openid = KeycloakOpenID(server_url=os.environ.get('KEYCLOAK_URL'),
                                  client_id=os.environ.get('KEYCLOAK_CLIENT_ID'),
