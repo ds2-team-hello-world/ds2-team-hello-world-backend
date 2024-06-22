@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak-db
+  labels:
+    app: keycloak-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak-db
+  template:
+    metadata:
+      labels:
+        app: keycloak-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:12
+        envFrom:
+        - configMapRef:
+            name: keycloak-db-config
+        - secretRef:
+            name: keycloak-db-secret
+        volumeMounts:
+        - name: postgres-persistent-storage
+          mountPath: /var/lib/postgresql/data
+          subPath: pgdata
+      volumes:
+      - name: postgres-persistent-storage
+        persistentVolumeClaim:
+          claimName: keycloak-data

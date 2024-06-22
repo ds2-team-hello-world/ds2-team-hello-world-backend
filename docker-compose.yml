@@ -1,0 +1,90 @@
+services:
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: helloworld
+      MYSQL_ROOT_HOST: '%'
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - mynetwork
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.0
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      DB_VENDOR: postgres
+      DB_ADDR: keycloak-db
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_PASSWORD: keycloakpassword
+    command: start-dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      - keycloak-db
+    networks:
+      - mynetwork
+
+  keycloak-db:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloakpassword
+    volumes:
+      - keycloak_data:/var/lib/postgresql/data
+    networks:
+      - mynetwork
+
+  configure-keycloak:
+    build: ./keycloak
+    depends_on:
+      - keycloak
+    environment:
+      CONFIG_KEYCLOAK_URL: http://keycloak:8080
+      CONFIG_KEYCLOAK_ADMIN_USERNAME: admin
+      CONFIG_KEYCLOAK_ADMIN_PASSWORD: admin
+      CONFIG_KEYCLOAK_REALM_NAME: myrealm
+      CONFIG_KEYCLOAK_FRONTEND_CLIENT_ID: myfrontendclient
+      CONFIG_KEYCLOAK_BACKEND_CLIENT_ID: mybackendclient
+      CONFIG_KEYCLOAK_CLIENT_SECRET: mysecret
+      CONFIG_KEYCLOAK_USER_USERNAME: testuser
+      CONFIG_KEYCLOAK_USER_PASSWORD: testpassword
+      CONFIG_KEYCLOAK_RECREATE_REALM: "false"
+      CONFIG_KEYCLOAK_MAX_RETRIES: 10
+      CONFIG_KEYCLOAK_RETRY_INTERVAL: 5000
+      CONFIG_KEYCLOAK_REDIRECT_URIS: http://localhost:8000/*,http://172.17.144.1:8000/*
+      CONFIG_KEYCLOAK_WEB_ORIGINS: http://localhost:8000,http://172.17.144.1:8000
+    networks:
+      - mynetwork
+
+  backend:
+    build: ./app
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: helloworld
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: myrealm
+      KEYCLOAK_CLIENT_ID: mybackendclient
+      KEYCLOAK_CLIENT_SECRET: mysecret
+    depends_on:
+      - mysql
+      - keycloak
+    networks:
+      - mynetwork
+
+volumes:
+  db_data:
+  keycloak_data:
+
+networks:
+  mynetwork:
+    driver: bridge
+
