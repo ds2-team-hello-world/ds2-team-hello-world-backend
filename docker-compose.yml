@@ -56,8 +56,8 @@ services:
       CONFIG_KEYCLOAK_RECREATE_REALM: "false"
       CONFIG_KEYCLOAK_MAX_RETRIES: 10
       CONFIG_KEYCLOAK_RETRY_INTERVAL: 5000
-      CONFIG_KEYCLOAK_REDIRECT_URIS: http://localhost:8000/*,http://172.17.144.1:8000/*,http://ds2-bucket-dev.s3-website-us-east-1.amazonaws.com/*,http://ds2-bucket.s3-website-us-east-1.amazonaws.com/*
-      CONFIG_KEYCLOAK_WEB_ORIGINS: http://localhost:8000,http://172.17.144.1:8000,http://ds2-bucket-dev.s3-website-us-east-1.amazonaws.com,http://ds2-bucket.s3-website-us-east-1.amazonaws.com
+      CONFIG_KEYCLOAK_REDIRECT_URIS: http://localhost:8000/*,http://172.17.144.1:8000/*
+      CONFIG_KEYCLOAK_WEB_ORIGINS: http://localhost:8000,http://172.17.144.1:8000
     networks:
       - mynetwork
 
@@ -70,6 +70,10 @@ services:
       DB_USER: root
       DB_PASSWORD: rootpassword
       DB_NAME: helloworld
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: myrealm
+      KEYCLOAK_CLIENT_ID: mybackendclient
+      KEYCLOAK_CLIENT_SECRET: mysecret
     depends_on:
       - mysql
       - keycloak
