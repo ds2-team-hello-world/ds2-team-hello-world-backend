@@ -137,7 +137,6 @@ jobs:
           kubectl create secret generic backend-secret --from-env-file=./app/.env --dry-run=client -o yaml | kubectl apply -f - -n dev
           kubectl create secret generic keycloak-secret --from-env-file=./keycloak/.env --dry-run=client -o yaml | kubectl apply -f - -n dev
           kubectl create secret generic keycloak-db-secret --from-literal=POSTGRES_USER=${{ secrets.POSTGRES_USER }} --from-literal=POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} --dry-run=client -o yaml | kubectl apply -f - -n dev
-          kubectl create secret generic keycloak-secret --from-literal=KEYCLOAK_ADMIN=${{ secrets.KEYCLOAK_ADMIN }} --from-literal=KEYCLOAK_ADMIN_PASSWORD=${{ secrets.KEYCLOAK_ADMIN_PASSWORD }} --from-literal=DB_USER=${{ secrets.POSTGRES_USER }} --from-literal=DB_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} --dry-run=client -o yaml | kubectl apply -f - -n dev
           kubectl create secret generic mysql-secret --from-literal=MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD_DEV }} --dry-run=client -o yaml | kubectl apply -f - -n dev
 
       - name: Create Secrets for Production
@@ -146,7 +145,6 @@ jobs:
           kubectl create secret generic backend-secret --from-env-file=./app/.env --dry-run=client -o yaml | kubectl apply -f - -n prod
           kubectl create secret generic keycloak-secret --from-env-file=./keycloak/.env --dry-run=client -o yaml | kubectl apply -f - -n prod
           kubectl create secret generic keycloak-db-secret --from-literal=POSTGRES_USER=${{ secrets.POSTGRES_USER }} --from-literal=POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} --dry-run=client -o yaml | kubectl apply -f - -n prod
-          kubectl create secret generic keycloak-secret --from-literal=KEYCLOAK_ADMIN=${{ secrets.KEYCLOAK_ADMIN }} --from-literal=KEYCLOAK_ADMIN_PASSWORD=${{ secrets.KEYCLOAK_ADMIN_PASSWORD }} --from-literal=DB_USER=${{ secrets.POSTGRES_USER }} --from-literal=DB_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} --dry-run=client -o yaml | kubectl apply -f - -n prod
           kubectl create secret generic mysql-secret --from-literal=MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD_PROD }} --dry-run=client -o yaml | kubectl apply -f - -n prod
 
       - name: Deploy to Development
