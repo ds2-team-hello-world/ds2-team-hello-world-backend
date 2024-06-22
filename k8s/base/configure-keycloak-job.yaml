@@ -18,6 +18,6 @@ spec:
         - configMapRef:
             name: keycloak-config
         - secretRef:
-            name: keycloak-secret
+            name: keycloak-config-secret
       restartPolicy: Never
   backoffLimit: 4
