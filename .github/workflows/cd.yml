@@ -82,7 +82,8 @@ jobs:
           echo "CONFIG_KEYCLOAK_MAX_RETRIES=${{ secrets.CONFIG_KEYCLOAK_MAX_RETRIES_PROD }}" >> .env
           echo "CONFIG_KEYCLOAK_RETRY_INTERVAL=${{ secrets.CONFIG_KEYCLOAK_RETRY_INTERVAL_PROD }}" >> .env
           echo "CONFIG_KEYCLOAK_REDIRECT_URIS=${{ secrets.CONFIG_KEYCLOAK_REDIRECT_URIS_PROD }}" >> .env
-          echo "CONFIG_KEYCLOAK_WEB_ORIGINS=${{ secrets.CONFIG_KEYCLOAK_WEB_ORIGINS_PROD }}" >> .env        working-directory: ./keycloak
+          echo "CONFIG_KEYCLOAK_WEB_ORIGINS=${{ secrets.CONFIG_KEYCLOAK_WEB_ORIGINS_PROD }}" >> .env
+        working-directory: ./keycloak
 
       - name: Build and push Docker images
         run: |
