@@ -43,6 +43,21 @@ services:
     build: ./keycloak
     depends_on:
       - keycloak
+    environment:
+      CONFIG_KEYCLOAK_URL: http://keycloak:8080
+      CONFIG_KEYCLOAK_ADMIN_USERNAME: admin
+      CONFIG_KEYCLOAK_ADMIN_PASSWORD: admin
+      CONFIG_KEYCLOAK_REALM_NAME: myrealm
+      CONFIG_KEYCLOAK_FRONTEND_CLIENT_ID: myfrontendclient
+      CONFIG_KEYCLOAK_BACKEND_CLIENT_ID: mybackendclient
+      CONFIG_KEYCLOAK_CLIENT_SECRET: mysecret
+      CONFIG_KEYCLOAK_USER_USERNAME: testuser
+      CONFIG_KEYCLOAK_USER_PASSWORD: testpassword
+      CONFIG_KEYCLOAK_RECREATE_REALM: "false"
+      CONFIG_KEYCLOAK_MAX_RETRIES: 10
+      CONFIG_KEYCLOAK_RETRY_INTERVAL: 5000
+      CONFIG_KEYCLOAK_REDIRECT_URIS: http://localhost:8000/*,http://172.17.144.1:8000/*,http://ds2-bucket-dev.s3-website-us-east-1.amazonaws.com/*,http://ds2-bucket.s3-website-us-east-1.amazonaws.com/*
+      CONFIG_KEYCLOAK_WEB_ORIGINS: http://localhost:8000,http://172.17.144.1:8000,http://ds2-bucket-dev.s3-website-us-east-1.amazonaws.com,http://ds2-bucket.s3-website-us-east-1.amazonaws.com
     networks:
       - mynetwork
 
@@ -51,12 +66,12 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - DB_HOST=mysql
-      - DB_USER=root
-      - DB_PASSWORD=rootpassword
-      - DB_NAME=helloworld
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: helloworld
     depends_on:
-      - database
+      - mysql
       - keycloak
     networks:
       - mynetwork
