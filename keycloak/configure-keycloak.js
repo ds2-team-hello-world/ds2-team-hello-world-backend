@@ -1,17 +1,21 @@
 const axios = require('axios');
-const keycloakUrl = 'http://keycloak:8080';
-const adminUsername = 'admin';
-const adminPassword = 'admin';
-const realmName = 'myrealm';
-const frontendClientId = 'myfrontendclient';
-const backendClientId = 'mybackendclient';
-const clientSecret = 'mysecret';
-const username = 'testuser';
-const password = 'testpassword';
-const recreateRealm = false; // Set this to true to delete and recreate the realm
+const keycloakUrl = process.env.CONFIG_KEYCLOAK_URL;
+const adminUsername = process.env.CONFIG_KEYCLOAK_ADMIN_USERNAME;
+const adminPassword = process.env.CONFIG_KEYCLOAK_ADMIN_PASSWORD;
+const realmName = process.env.CONFIG_KEYCLOAK_REALM_NAME;
+const frontendClientId = process.env.CONFIG_KEYCLOAK_FRONTEND_CLIENT_ID;
+const backendClientId = process.env.CONFIG_KEYCLOAK_BACKEND_CLIENT_ID;
+const clientSecret = process.env.CONFIG_KEYCLOAK_CLIENT_SECRET;
+const username = process.env.CONFIG_KEYCLOAK_USER_USERNAME;
+const password = process.env.CONFIG_KEYCLOAK_USER_PASSWORD;
+const recreateRealm = process.env.CONFIG_KEYCLOAK_RECREATE_REALM === 'true';
 
-const maxRetries = 10;
-const retryInterval = 5000;
+const redirectUris = process.env.CONFIG_KEYCLOAK_REDIRECT_URIS ? process.env.CONFIG_KEYCLOAK_REDIRECT_URIS.split(',') : [];
+
+const webOrigins = process.env.CONFIG_KEYCLOAK_WEB_ORIGINS ? process.env.CONFIG_KEYCLOAK_WEB_ORIGINS.split(',') : [];
+
+const maxRetries = parseInt(process.env.CONFIG_KEYCLOAK_MAX_RETRIES, 10);
+const retryInterval = parseInt(process.env.CONFIG_KEYCLOAK_RETRY_INTERVAL, 10);
 
 async function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -133,18 +137,8 @@ async function createClient(token, clientId, isPublic) {
             enabled: true,
             publicClient: isPublic,
             secret: isPublic ? undefined : clientSecret,
-            redirectUris: [
-                'http://localhost:8000/*',
-                'http://172.17.144.1:8000/*',
-                'http://ds2-bucket-dev.s3-website-us-east-1.amazonaws.com/*',
-                'http://ds2-bucket.s3-website-us-east-1.amazonaws.com/*'
-            ],
-            webOrigins: [
-                'http://localhost:8000',
-                'http://172.17.144.1:8000',
-                'http://ds2-bucket-dev.s3-website-us-east-1.amazonaws.com',
-                'http://ds2-bucket.s3-website-us-east-1.amazonaws.com'
-            ],
+            redirectUris: redirectUris,
+            webOrigins: webOrigins,
             directAccessGrantsEnabled: true
         }, {
             headers: {
