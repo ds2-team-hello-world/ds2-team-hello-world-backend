@@ -1,0 +1,7 @@
+Flask>=2.0.2
+mysql-connector-python==8.0.26
+flask-cors==3.0.10
+requests
+python-keycloak==4.0.0
+pytest==6.2.4
+pytest-cov==2.12.1
