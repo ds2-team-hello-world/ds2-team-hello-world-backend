@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: configure-keycloak
+  labels:
+    app: configure-keycloak
+spec:
+  template:
+    metadata:
+      labels:
+        app: configure-keycloak
+    spec:
+      containers:
+      - name: configure-keycloak
+        image: ahmedbest/configure-keycloak:latest
+        command: ["node", "configure-keycloak.js"]
+        envFrom:
+        - configMapRef:
+            name: keycloak-config
+        - secretRef:
+            name: keycloak-config-secret
+      restartPolicy: Never
+  backoffLimit: 4
