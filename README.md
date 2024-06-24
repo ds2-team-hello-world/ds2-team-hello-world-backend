@@ -7,6 +7,11 @@ This document provides a detailed explanation of the backend deployment process,
 - Docker images used and built
 - Kubernetes deployment and configuration, environment configurations, secrets management, deployed components, jobs, and storage.
 
+### Application Architecture
+![Application Architecture](diagrams/architecture.png)
+
+### Application Deployment
+![Application Deployment](diagrams/deployment.png)
 ---
 ## Technologies Used
 
